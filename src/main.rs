@@ -66,8 +66,22 @@ fn calc(step: u8, max: u8, temp: &mut Vec<char>, result: &mut Vec<Vec<char>>) {
 
 fn pretty_print_predict_result(scores: &[(u8, u8, u8); 4],
                                index_to_name: &[&str; 4],
-                               predictions: &Vec<char>,
-                               matches: &Vec<(u8, u8)>) {
+                               prediction: char,
+                               t1: &str,
+                               t2: &str) {
+    if prediction == 'W' {
+        println!("If {} win and {} lose:", t1, t2);
+    } else if prediction == 'L' {
+        println!("If {} win and {} lose:", t2, t1);
+    } else {
+        println!("If {} and {} draw:", t1, t2);
+    }
+    let mut i: usize = 0;
+    println!("Name   GF   GA  pts");
+    for (gf, ga, pts) in scores {
+        println!("{}  {}  {}  {}", index_to_name[i], gf, ga, pts);
+        i += 1;
+    }
 }
 
 fn main() {
@@ -149,10 +163,14 @@ fn main() {
 
         let mut i = 0;
         while i < p_r.len() {
-            let (tn_1, tn_2) = diff[i];
+            let (tn1, tn2) = diff[i];
+            let tn_1 = tn1 as usize;
+            let tn_2 = tn2 as usize;
             if p_r[i] == 'W' {
                 let (gf, ga, pts) = scores[tn_1 - 1];
                 scores[tn_1 - 1] = (gf, ga, pts + 3);
+                pretty_print_predict_result(&scores, &index_to_name, 'W', &index_to_name[tn_1 - 1],
+                                            &index_to_name[tn_2 - 1]);
             } else if p_r[i] == 'L' {
                 let (gf, ga, pts) = scores[tn_2 - 1];
                 scores[tn_2 - 1] = (gf, ga, pts + 3);
@@ -162,11 +180,18 @@ fn main() {
                 scores[tn_1 - 1] = (t1_gf, t1_ga, t1_pts + 1);
                 scores[tn_2 - 1] = (t2_gf, t2_ga, t2_pts + 1);
             }
-            i++;
+            i += 1;
         }
         println!("---{}---{}---", p_r[0], p_r[1]);
         // Pretty print the predict result
-
+/*
+ * as immutable because it is also borrowed as mutable
+fn pretty_print_predict_result(scores: &[(u8, u8, u8); 4],
+                               index_to_name: &[&str; 4],
+                               prediction: char,
+                               t1: &str,
+                               t2: &str) {
+                               */
         // reset pts to original (get ready for next iteration)
     }
 }
