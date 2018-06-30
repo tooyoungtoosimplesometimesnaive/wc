@@ -66,20 +66,31 @@ fn calc(step: u8, max: u8, temp: &mut Vec<char>, result: &mut Vec<Vec<char>>) {
 
 fn pretty_print_predict_result(scores: &[(u8, u8, u8); 4],
                                index_to_name: &[&str; 4],
-                               prediction: char,
-                               t1: &str,
-                               t2: &str) {
-    if prediction == 'W' {
-        println!("If {} win and {} lose:", t1, t2);
-    } else if prediction == 'L' {
-        println!("If {} win and {} lose:", t2, t1);
-    } else {
-        println!("If {} and {} draw:", t1, t2);
-    }
+                               predictions: &Vec<char>,
+                               matches: &Vec<(u8, u8)>) {
+
     let mut i: usize = 0;
-    println!("Name   GF   GA  pts");
+    print!("If ");
+    for prediction in predictions {
+        let (t1, t2) = matches[i];
+        let t1_n = t1 as usize - 1;
+        let t2_n = t2 as usize - 1;
+        if *prediction == 'W' {
+            print!("{} win {} lose, ", index_to_name[t1_n], index_to_name[t2_n]);
+        } else if *prediction == 'L' {
+            print!("{} win {} lose, ", index_to_name[t2_n], index_to_name[t1_n]);
+        } else {
+            print!("{} and {} draw, ", index_to_name[t1_n], index_to_name[t2_n]);
+        }
+        i += 1;
+    }
+    println!("");
+
+    i = 0;
+    let align = 15;
+    println!("{name:>d$}{gf:>d$}{ga:>d$}{pts:>d$}", name="Name", gf="GF", ga="GA", pts="PTS", d=align);
     for (gf, ga, pts) in scores {
-        println!("{}  {}  {}  {}", index_to_name[i], gf, ga, pts);
+        println!("{name:>d$}{gf:>d$}{ga:>d$}{pts:>d$}", name=index_to_name[i], gf=gf, ga=ga, pts=pts, d=align);
         i += 1;
     }
 }
@@ -87,9 +98,10 @@ fn pretty_print_predict_result(scores: &[(u8, u8, u8); 4],
 fn main() {
     let a = [1,2,3,4];
     let combinition = matches(a);
+    /*
     for (t1, t2) in &combinition {
         println!("{} vs {}", t1, t2);
-    }
+    }*/
     let mut map = HashMap::new();
     map.insert("Mexico", 1);
     map.insert("Germany", 2);
@@ -139,27 +151,22 @@ fn main() {
             let tn_1 = *n1 as u8; // team 1 index
             let tn_2 = *n2 as u8; // team 2 index
             current_combinitions.push((tn_1, tn_2));
-            // println!("match: {}", find_match(combinition, (n_1, n_2)));
         }}
     }
 
-    for s in &scores {
-        let (a, b, c) = s;
-        println!("{}, {}, {}", a, b, c);
-    }
-    
     let diff = get_remaining_matches(combinition,
                          &current_combinitions);
 
     let remaining_match_num = diff.len() as u8;
-
-    for (tn_1, tn_2) in &diff {
-        println!("the diff {}.{}", tn_1, tn_2);
-    }
     let mut predict_results: Vec<Vec<char>> = Vec::new();
     calc(0, remaining_match_num, &mut Vec::new(), &mut predict_results);
 
     for p_r in predict_results {
+
+        let mut original_scores: [(u8, u8, u8); 4] = [
+            (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)];
+
+        original_scores.copy_from_slice(&scores[..]);
 
         let mut i = 0;
         while i < p_r.len() {
@@ -169,8 +176,6 @@ fn main() {
             if p_r[i] == 'W' {
                 let (gf, ga, pts) = scores[tn_1 - 1];
                 scores[tn_1 - 1] = (gf, ga, pts + 3);
-                pretty_print_predict_result(&scores, &index_to_name, 'W', &index_to_name[tn_1 - 1],
-                                            &index_to_name[tn_2 - 1]);
             } else if p_r[i] == 'L' {
                 let (gf, ga, pts) = scores[tn_2 - 1];
                 scores[tn_2 - 1] = (gf, ga, pts + 3);
@@ -182,16 +187,10 @@ fn main() {
             }
             i += 1;
         }
-        println!("---{}---{}---", p_r[0], p_r[1]);
+
         // Pretty print the predict result
-/*
- * as immutable because it is also borrowed as mutable
-fn pretty_print_predict_result(scores: &[(u8, u8, u8); 4],
-                               index_to_name: &[&str; 4],
-                               prediction: char,
-                               t1: &str,
-                               t2: &str) {
-                               */
+        pretty_print_predict_result(&scores, &index_to_name, &p_r, &diff);
         // reset pts to original (get ready for next iteration)
+        scores.copy_from_slice(&original_scores[..]);
     }
 }
