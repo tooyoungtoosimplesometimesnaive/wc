@@ -139,7 +139,8 @@ fn main() {
             if score_1 > score_2 {
                 t1_pts += 3;
             } else if score_1 < score_2 {
-                t2_pts += 3; } else {
+                t2_pts += 3; 
+            } else {
                 t1_pts += 1;
                 t2_pts += 1;
             }
@@ -154,6 +155,7 @@ fn main() {
         }}
     }
 
+    // the remaining matches.
     let diff = get_remaining_matches(combinition,
                          &current_combinitions);
 
